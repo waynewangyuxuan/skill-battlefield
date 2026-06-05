@@ -1,0 +1,18 @@
+{
+  "name": "skill-battlefield",
+  "version": "0.1.0",
+  "description": "AI tests skills, humans write them. Stress-test AI agent skills across diverse scenarios, get diagnostic evidence and improvement proposals.",
+  "author": {
+    "name": "Wayne Wang"
+  },
+  "homepage": "https://github.com/waynewangyuxuan/skill-battlefield",
+  "repository": "https://github.com/waynewangyuxuan/skill-battlefield",
+  "license": "MIT",
+  "keywords": [
+    "skill-testing",
+    "skill-optimization",
+    "evaluation",
+    "diagnostics",
+    "scenario-generation"
+  ]
+}
