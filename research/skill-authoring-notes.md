@@ -61,3 +61,29 @@
 - **D4 (Instruction Clarity)**: Strong. Information boundaries spelled out twice each (what IS received, what is NOT received). No ambiguity about which data flows where.
 - **D5 (Architecture)**: Good. References rubric-guide.md and contracts.md. ~90 lines. Single responsibility (evaluate scenarios).
 - **D6 (Evolvability)**: Good. Adding new realism guidance = one bullet. Changing the parallelism cap = one number. The simulate/judge structure is extensible to multi-round evaluation if needed later.
+
+## Phase 04 — sharpen.md (2026-06-05)
+
+### Core design constraint: isolated variable per iteration
+- Each iteration rewrites exactly one section. This makes score changes attributable — if the score goes up after rewriting the instruction section, we know instruction clarity was the bottleneck. Multi-section rewrites would confound the signal.
+- The "one section" rule also limits blast radius: a bad rewrite can only damage one section, and the discard mechanism reverts it cleanly.
+
+### Patterns applied
+- **Memento-Skills loop**: Analyze failures, rewrite, re-evaluate, decide. The loop state (current_evals, attempted_sections, consecutive_no_improvement) carries forward without needing external memory.
+- **Robin executor pattern**: I/O table, numbered steps (4.1-4.7), output checklist. Sub-steps within the loop mirror Phase 03's structure.
+- **Rewrite feedback on discard**: When a rewrite is discarded, the failed diff and judge reasoning are passed to the next attempt. This prevents the rewriter from proposing the same change twice and gives it specific failure signal to learn from.
+- **Positive framing in rewrites**: The rewrite rules enforce "Add X" over "Remove ambiguity about X" — this applies the same principle we use in skill authoring to the automated rewriting itself.
+
+### Design decisions
+- **Tie-breaking order** (instruction > activation > gate > reference > meta): Instruction sections have the highest surface area for behavioral change. Activation sections are second because they control whether the skill fires at all. Meta is last because metadata changes rarely affect behavior.
+- **Easy-tier regression guard**: A rewrite that improves hard cases but breaks easy ones is net negative — easy cases represent the core use case. This prevents optimization for edge cases at the cost of basic functionality.
+- **Max 2 retries per iteration**: Enough to recover from a bad first attempt (especially with the discard feedback), but not so many that the loop spends all its budget on one stubborn section.
+- **Drift tracking by character count**: Simple proxy for semantic drift. A skill that doubles in length has likely drifted from its original scope. The 40% default is generous enough to allow meaningful additions but catches runaway expansion.
+- **Re-eval procedure inlined**: The subagent running Phase 04 does not have Phase 03 loaded, so the re-eval procedure is summarized inline with all critical rules (information boundaries, borderline retry, temperature 0). This duplicates some content from Phase 03 but is necessary for correct execution.
+
+### D1-D6 self-assessment
+- **D2 (Execution Compliance)**: Strong. Seven sub-steps per iteration with clear sequencing. The decide step has explicit KEEP/DISCARD criteria with no ambiguity. Early stop conditions are enumerated as a checklist.
+- **D3 (Behavioral Alignment)**: Strong. Easy-tier regression guard, drift limit, and exhaustion check prevent common optimization failure modes. Retry mechanism with feedback handles the stochastic nature of LLM rewrites.
+- **D4 (Instruction Clarity)**: Good. Re-eval procedure is self-contained. Rewrite rules are concrete. However, mapping failures to sections (step 4.1) requires judgment — this is the least mechanical step.
+- **D5 (Architecture)**: Good. References contracts.md for all schemas. 128 lines despite being the most complex phase. Config params have sensible defaults.
+- **D6 (Evolvability)**: Good. Adding new early stop conditions = one bullet. Changing retry limit = one number. The loop structure supports adding new sub-steps (e.g., a "simplify" step after rewrite) without restructuring.
