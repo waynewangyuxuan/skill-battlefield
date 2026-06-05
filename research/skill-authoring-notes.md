@@ -87,3 +87,24 @@
 - **D4 (Instruction Clarity)**: Good. Re-eval procedure is self-contained. Rewrite rules are concrete. However, mapping failures to sections (step 4.1) requires judgment — this is the least mechanical step.
 - **D5 (Architecture)**: Good. References contracts.md for all schemas. 128 lines despite being the most complex phase. Config params have sensible defaults.
 - **D6 (Evolvability)**: Good. Adding new early stop conditions = one bullet. Changing retry limit = one number. The loop structure supports adding new sub-steps (e.g., a "simplify" step after rewrite) without restructuring.
+
+## Phase 05 — report.md (2026-06-05)
+
+### Patterns applied
+- **Robin executor pattern**: I/O table, 7 numbered steps, output checklist.
+- **Reference, don't inline**: Points to contracts.md for schemas, taxonomy.md for dimension names. Report template is inlined because it IS the primary output specification.
+- **Under 120 lines**: Final file is 119 lines. Achieved by compressing the "How to Apply" section and tightening score computation descriptions.
+
+### Design decisions
+- **Status classification (FIXED/IMPROVED/OPEN)**: Three-tier rather than binary. FIXED requires a high bar (before < 7 AND after >= 9) to prevent inflated "fixed" counts. IMPROVED captures genuine progress. OPEN is the default for anything that hasn't meaningfully improved.
+- **Final version identification**: Uses the highest kept iteration, not the last iteration. This handles the case where the last iteration was discarded — the report reflects the actual final state of skill-current.md.
+- **skill-sharpened.md is a byte-identical copy**: No post-processing. The sharpening happened in Phase 04. This phase only packages the result. Separating the output name from skill-current.md makes the run directory self-documenting (original, current working copy, final sharpened output).
+- **Findings capped at 5**: Forces prioritization. More than 5 findings dilutes attention. Each finding must state dimension + action + impact in one sentence — no multi-paragraph narratives.
+- **Dimension scoring uses scenario tags**: Each scenario has a primary `dimension` field. Scores are grouped by this tag, not by dimension_scores (which are sparse). This avoids N/A pollution from the judge's conservative null-unless-evidenced policy.
+
+### D1-D6 self-assessment
+- **D2 (Execution Compliance)**: Good. Seven steps are sequential and concrete. The template is exact — no ambiguity about output format. Output checklist catches the key invariants (byte-identical copy, explicit signs, decimal formatting).
+- **D3 (Behavioral Alignment)**: Moderate. The "identify findings" step requires judgment about what counts as impactful. Mitigated by the "largest positive delta" prioritization rule.
+- **D4 (Instruction Clarity)**: Strong. Score computation rules are explicit formulas. Status classification is a decision table. Template is a literal code block.
+- **D5 (Architecture)**: Strong. Pure read-and-format phase — no side effects beyond writing two files. 119 lines. References both contracts.md and taxonomy.md.
+- **D6 (Evolvability)**: Good. Adding a new report section = add to the template block + one step. The template is easy to extend without restructuring the computation steps.
