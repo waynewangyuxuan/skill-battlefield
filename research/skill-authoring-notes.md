@@ -36,3 +36,28 @@
 - **Dimension-to-tier mapping**: Advisory, not enforced. Helps the subagent distribute dimensions naturally rather than randomly assigning.
 - **Self-critique step** (step 7): Added as an explicit step before writing, because LLMs tend to generate redundant scenarios if not prompted to review. This is a lightweight alternative to a separate validation phase.
 - **Inline validation script**: The python3 validator checks line count, ID sequencing, minimum checks per scenario, and dimension coverage — the four most likely failure modes of generation.
+
+## Phase 03 — baseline.md (2026-06-05)
+
+### Core design constraint: information separation
+- This is the most nuanced phase because it requires strict firewalling between simulator and judge. The simulator sees the skill + user message but never the expected_behaviors. The judge sees the simulated response + expected_behaviors but never the skill text. Without this separation, the eval is meaningless — the simulator would optimize for the rubric, and the judge would infer pass criteria from the skill instead of evaluating the response on its own merits.
+- Marked with "HARD GATE" labels and bold warnings. This is stronger language than any other phase uses, because the consequence of violation is silent corruption (results look valid but are inflated).
+
+### Patterns applied
+- **Robin executor pattern**: I/O table, numbered steps, output checklist.
+- **Two-step decomposition**: Simulate and judge are explicitly separated sub-steps (2A and 2B), not just described in prose. Horizontal rules visually separate them.
+- **Autorubric findings**: Binary per-criterion checks, majority vote for borderlines (scores 4-6), temperature 0 for judge determinism. These come from research on LLM-as-judge reliability.
+- **Echo append over heredoc**: For JSONL output, echo-append is safer than a single heredoc because it avoids shell escaping issues with JSON containing quotes and special characters.
+
+### Design decisions
+- **Parallelism cap at 5**: Enough to speed up a 20-scenario run (4 batches) without overwhelming context windows. Each sub-evaluator is self-contained (one scenario's full cycle).
+- **Realism guidance bullets**: Four specific examples of how real agents deviate from ideal behavior. Without these, simulators tend toward optimistic "I would do everything perfectly" responses that inflate scores.
+- **Score adjustment of +/-1**: Allows the judge to account for quality factors not captured by binary checks (e.g., depth of explanation, specificity of tool calls) without making scoring subjective. Clamped to 1-10.
+- **Dimension scoring strategy**: Only score the primary dimension to avoid noise. Secondary dimensions scored only when there's clear evidence — prevents the judge from speculating.
+
+### D1-D6 self-assessment
+- **D2 (Execution Compliance)**: Strong. Four numbered steps with clear sequencing. The two HARD GATE markers are the most critical gates in the entire project. Validation script checks all schema fields.
+- **D3 (Behavioral Alignment)**: Strong. Realism guidance prevents optimistic simulation. Borderline retry mechanism prevents noisy scores near the pass/fail boundary.
+- **D4 (Instruction Clarity)**: Strong. Information boundaries spelled out twice each (what IS received, what is NOT received). No ambiguity about which data flows where.
+- **D5 (Architecture)**: Good. References rubric-guide.md and contracts.md. ~90 lines. Single responsibility (evaluate scenarios).
+- **D6 (Evolvability)**: Good. Adding new realism guidance = one bullet. Changing the parallelism cap = one number. The simulate/judge structure is extensible to multi-round evaluation if needed later.
