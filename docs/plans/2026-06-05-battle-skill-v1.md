@@ -8,6 +8,38 @@
 
 **Tech Stack:** Claude Code plugin (plugin.json + SKILL.md files), markdown instructions only, Agent tool for subagent dispatch, Bash tool for file I/O within phases.
 
+**Meta-constraint:** We are building skills to optimize skills. Every skill file we write must itself follow the best practices we researched. Before writing each phase file, research how similar skill instructions are written in the wild (superpowers, Anthropic official skills, top community skills). Apply our own taxonomy (D1-D6) as a self-check. Dogfood relentlessly.
+
+---
+
+## Research-Before-Writing Protocol
+
+For EACH task that creates a skill file (Tasks 4-9), the implementer MUST:
+
+1. **Study reference skills** — Read 2-3 existing skills that do something similar:
+   - For orchestrator (SKILL.md): study `superpowers:brainstorming`, `superpowers:writing-plans`, or any multi-phase skill with subagent dispatch
+   - For phase files: study how `robin:robin-executor`, `robin:robin-reviewer`, or similar subagent instruction files are structured
+   - For the evaluator/judge role: look at how `code-review` or `superpowers:requesting-code-review` frame evaluation criteria
+   - Search GitHub for any published skill that does scenario generation, LLM-as-judge, or iterative optimization
+
+2. **Apply our own 12 principles** (from research/00-synthesis.md):
+   - Positive framing (no pink elephants)
+   - Structure for scanning (headers, bullets, tables — not prose)
+   - Only non-default knowledge (don't tell the model what it already knows)
+   - Hard gates where compliance matters
+   - Directive description (pushy, with negative triggers)
+   - Progressive disclosure (keep phase file lean, reference files for details)
+
+3. **Self-evaluate against D1-D6** before committing:
+   - D1: Will the orchestrator reliably dispatch this phase? Is the prompt clear enough?
+   - D2: Will the subagent follow all steps? Are there skippable middle steps?
+   - D3: What happens with weird input? Empty skill? Massive skill? Binary file?
+   - D4: Is every instruction actionable? Any vague language?
+   - D5: Is this file under 200 lines? Does it reference rather than inline?
+   - D6: Can this phase be improved independently without breaking others?
+
+4. **Log research findings** — After each research step, append a brief note to `research/skill-authoring-notes.md` with what you learned and how it influenced the file you wrote.
+
 ---
 
 ## File Structure
@@ -1272,7 +1304,22 @@ Once the small run works, do a full test:
 
 Verify the report, review the sharpened skill, confirm the pipeline runs end-to-end.
 
-- [ ] **Step 8: Push to remote**
+- [ ] **Step 8: Self-battle (ultimate dogfood)**
+
+Run `/battle` against our own SKILL.md:
+
+```bash
+/battle /Users/waynewang/skill-battlefield/skills/battle/SKILL.md --scenarios 10 --iterations 3
+```
+
+This tests whether our skill-testing skill can test itself. Review the report:
+- Does it find real weaknesses in our orchestrator?
+- Are the generated scenarios realistic for a meta-skill?
+- Do the rewrite proposals make sense?
+
+If the self-battle report reveals issues, fix them and re-run. This is the strongest validation — if /battle can improve itself, it works.
+
+- [ ] **Step 9: Push to remote**
 
 ```bash
 cd /Users/waynewang/skill-battlefield
