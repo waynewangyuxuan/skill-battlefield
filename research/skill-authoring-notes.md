@@ -108,3 +108,34 @@
 - **D4 (Instruction Clarity)**: Strong. Score computation rules are explicit formulas. Status classification is a decision table. Template is a literal code block.
 - **D5 (Architecture)**: Strong. Pure read-and-format phase — no side effects beyond writing two files. 119 lines. References both contracts.md and taxonomy.md.
 - **D6 (Evolvability)**: Good. Adding a new report section = add to the template block + one step. The template is easy to extend without restructuring the computation steps.
+
+## SKILL.md — /battle orchestrator (2026-06-05)
+
+### Reference skills studied
+- **superpowers:brainstorming**: Checklist-driven orchestration with sequential task completion. Key takeaway: each checklist item is a discrete phase with a clear deliverable. The orchestrator creates tasks for each phase and completes them in order. Applied: our phase sections mirror this pattern — each phase dispatches a subagent and verifies output before proceeding.
+- **Anthropic skill-creator**: "Pushy" description style — explicitly lists trigger phrases and anti-triggers. The description field doubles as a triggering mechanism, so it must over-specify to combat Claude's tendency to under-trigger skills. Applied: our description includes 6 trigger phrases and 3 anti-trigger conditions.
+- **superpowers:brainstorming HARD-GATE pattern**: A single bold `<HARD-GATE>` block before any implementation action. Applied: we use "HARD GATE" markers after each phase to verify output files exist before proceeding.
+
+### 12 principles applied
+1. **Directive description**: Description front-loads intent ("Stress-test a Claude Code skill"), includes explicit TRIGGER/DO NOT TRIGGER lists, and is pushy about when to activate.
+2. **Positive framing**: All instructions use imperative "do X" form. "Verify X exists" not "Don't proceed if X is missing."
+3. **Hard gates**: Six HARD GATE checkpoints — one after each phase plus spot-check. Each verifies a concrete file exists.
+4. **Structure for scanning**: Headers for each phase. No prose paragraphs. Each phase section follows the same pattern: read inputs, dispatch subagent, verify output, print progress.
+5. **Under 300 lines**: Final file is ~130 lines. Achieved by keeping phase sections lean — the detailed instructions live in the phase files, not in SKILL.md.
+6. **Reference, don't inline**: Phase instructions and reference content are read from disk and passed to subagents. SKILL.md contains only orchestration logic.
+7. **Progressive disclosure**: SKILL.md (always loaded) is the orchestrator. Phase files (loaded per-phase) contain the detailed instructions. Reference files (loaded as needed) contain schemas and taxonomies.
+8. **Only non-default knowledge**: Omitted general subagent dispatch patterns. Focused on the specific phase sequencing, file contracts, and spot-check procedure that are unique to this skill.
+
+### Design decisions
+- **Spot-check between Phase 04 and 05**: Placed here because it needs the final sharpened skill (from Phase 04) and its results feed into the report (Phase 05). The spot-check validates simulation reliability by comparing simulated scores against real `claude -p` execution.
+- **Scenario selection for spot-check**: Five scenarios chosen to maximize information: highest score (sanity check), lowest score (worst case), threshold scores (borderline reliability), adversarial (stress test). This covers the full score distribution without running all scenarios through `claude -p`.
+- **Phase file reading at dispatch time**: Each phase section reads its instruction file and reference files just before dispatch. This avoids loading all phase content upfront (which would bloat the orchestrator's context) and ensures subagents receive exactly the content they need.
+- **Score tracking through progress.jsonl**: The orchestrator reads progress.jsonl after Phase 04 rather than re-computing scores from evals. This respects Phase 04's authoritative score tracking and avoids duplicating score computation logic.
+
+### D1-D6 self-assessment
+- **D1 (Activation)**: Strong. Six trigger phrases cover common ways users request skill testing. Three anti-triggers prevent false positives on new skill creation, general code review, and non-skill files. Description is deliberately pushy.
+- **D2 (Execution Compliance)**: Strong. Six sequential phases with HARD GATE after each. No skippable steps — each phase produces output required by the next. Argument parsing and validation are explicit.
+- **D3 (Behavioral Alignment)**: Good. Handles edge cases: missing skill_path (usage message), invalid file (error message), missing phase output (stop with error). Spot-check validates simulation reliability.
+- **D4 (Instruction Clarity)**: Strong. Each phase section follows the same 4-step pattern (read, dispatch, verify, print). No ambiguity about what inputs each subagent receives.
+- **D5 (Architecture)**: Strong. ~130 lines for a 6-phase orchestrator. All detail lives in phase files and references. Clear separation: SKILL.md orchestrates, phase files instruct, reference files define schemas.
+- **D6 (Evolvability)**: Good. Adding a new phase = one new section following the existing pattern. Changing defaults = edit the argument parsing section. The spot-check procedure is self-contained and can be extended independently.
