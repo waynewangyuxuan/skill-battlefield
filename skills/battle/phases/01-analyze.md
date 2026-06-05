@@ -16,7 +16,7 @@ Output must conform to the `analysis.json` schema defined in `references/contrac
 
 ### 1. Read the skill file
 
-Read `{skill_dir}/SKILL.md`. If that file does not exist, scan `{skill_dir}` for the first `.md` file alphabetically.
+Read `{run_dir}/skill-original.md`.
 
 Store the raw content and total line count.
 
